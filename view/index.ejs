@@ -26,7 +26,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="#">Brand</a>
+                <a class="navbar-brand" href="#">HTTP请求日志</a>
             </div>
 
             <!-- Collect the nav links, forms, and other content for toggling -->
@@ -72,33 +72,98 @@
         </div>
         <!-- /.container-fluid -->
     </nav>
-    <div class="container">
-
-
+    <div class="">
+  <table class="table ">
+      <thead>
+        <tr>
+          <th>#</th>
+            <% for (let item in log[0]) { %>
+                <th><%= item %></th>
+            <% } %>
+                <th> 功 能 </th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (var i=0; i<log.length; i++) { %>
+            <% if(!log[i].delete){ %>
+            <tr class="success">
+                <th scope="row"><%= i %></th>
+                <td><%= log[i].creadTime %></td>
+                <td><%= log[i].header %></td>
+                <td><%= log[i].method %></td>
+                <td><%= log[i].url %></td>
+                <td><%= log[i].originalUrl %></td>
+                <td><%= log[i].origin %></td>
+                <td><%= log[i].href %></td>
+                <td><%= log[i].path %></td>
+                <td><%= log[i].querystring %></td>
+                <td><%= log[i].host %></td>
+                <td><%= log[i].hostname %></td>
+                <td><%= log[i].fresh %></td>
+                <td><%= log[i].stale %></td>
+                <td><%= log[i].protocol %></td>
+                <td><%= log[i].secure %></td>
+                <td><%= log[i].ip %></td>
+                <td><%= log[i].ips %></td>
+                <td><%= log[i].status %></td>
+                <td><%= log[i].delete %></td>
+                <td class="itemTd"><button type="button" id="clickDelete" class="btn btn-danger" data-index="<%= i%>">删除日志</button></td>
+            </tr>
+             <% } %>
+        <% } %>
+      </tbody>
+    </table>
     </div>
+
 </body>
 <script src="https://cdn.bootcss.com/axios/0.18.0/axios.js"></script>
 <script src="https://cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.js"></script>
 <script>
     console.log('执行')
+    axios.defaults.headers.common['Authorization'] = 'Bearer ' + $.cookie('token')
+
     $('#clickOut').on('click', () => {
         console.log('退出')
-        // $.post('/logout',{token : '1233'},function(data){
-        //     console.log('发出')
-        // })
-
-        console.log($.cookie('token'))
-        axios.get('/test', {
-            headers: {
-                'Authorization': 'Bearer ' + $.cookie('token'),
-            },
-            params: {
-                param1: 'string',
-                param2: 'string'
-            },
-        }
-        )
+        axios.post('/logout', {
+                token:$.cookie('token')
+         }   
+        ).then((res)=>{
+            console.log(res)
+            if(res.ok){
+                alert('退出成功')
+            }
+        })
     })
+
+    $('.success .itemTd #clickDelete').each(function(index,item){
+        $(item).on('click',function(){
+            let index = $(this).attr('data-index')
+            axios.post('/deleteLog', {
+                token:$.cookie('token'),
+                index:index
+            }).then((res)=>{
+                console.log(res)
+                if(res.ok){
+                    alert('退出成功')
+                }
+            })
+        })
+
+    })
+    // $('body #clickDelete').on('click',()=>{
+    //     console.log('序列')
+    //     let that = this
+    //     console.log($(that).attr('data-index'))
+    //      axios.post('/deleteLog', {
+    //         token:$.cookie('token')
+    //      }   
+    //     ).then((res)=>{
+    //         console.log(res)
+    //         if(res.ok){
+    //             alert('退出成功')
+    //         }
+    //     })
+    // })
 </script>
 
 </html>

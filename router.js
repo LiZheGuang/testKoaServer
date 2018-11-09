@@ -4,9 +4,9 @@ const jwt = require('jsonwebtoken');
 
 const koajwt = require('koa-jwt');
 
+const istoken = require('./lib/authorization.js').isToken
+
 let router = new KoaRouter();
-
-
 
 let userDB = [{
     accounts: 'admin',
@@ -15,15 +15,17 @@ let userDB = [{
 
 let jwtPassword = 'a7161089'
 
-router.get('/index', async (ctx, next) => {
+router.get('/', async (ctx, next) => {
     // ctx.router available
     let title = 'index'
     // 查询本地是否有token，
     let token = ctx.cookies.get('token')
+    
     if(token){
         // 有token
         await ctx.render('index', {
-            title: title
+            title: title,
+            log:global.apiList
         })
     }else{
         ctx.redirect('/login')
@@ -41,9 +43,7 @@ router.get('/login', async (ctx, next) => {
     console.log(ctx.request.body)
     let accounts = ctx.request.body.accounts
     let password = ctx.request.body.password
-    function genID(length) {
-        return Number(Math.random().toString().substr(3, length) + Date.now()).toString(36);
-    }
+
     console.log(userDB[0].accounts == accounts && userDB[0].password == password)
 
 
@@ -69,14 +69,14 @@ router.get('/login', async (ctx, next) => {
         )
 
         // 登陆成功直接跳转
-        ctx.redirect('/index')
+        ctx.redirect('/')
 
 
     } else {
         // 登陆失败
         return ctx.body = {
             ok: false,
-            message: 'not accounts'
+            message: '登录失败，没有此账号'
         }
     }
 
@@ -84,12 +84,6 @@ router.get('/login', async (ctx, next) => {
 
 })
 
-// 登出
-router.post('/logout',async (ctx,next)=>{
-    console.log(ctx.request.body)
-    let body =  ctx.request.body 
-    
-})
 
 router.get('/test',async (ctx,next)=>{
     console.log('test')
@@ -107,15 +101,48 @@ router.get('/user',async (ctx,next)=>{
     ctx.body = {code:200}
 })
 
-
-
 router.get('/log', async (ctx, next) => {
     let title = 'Koa2'
     let apiList = global.apiList
-    await ctx.render('log', {
-        title: title
-    })
+    ctx.body = {
+        code:200,
+        log:apiList
+    }
 })
 
+// 登出
+router.post('/logout', koajwt({secret: jwtPassword}),async (ctx,next)=>{
+    let token = await istoken(ctx,jwtPassword)
+    ctx.body = {ok:true,message:'登出成功'}
+    ctx.cookies.set('token','',{signed:false,maxAge:0})
+})
+
+router.post('/deleteLog', koajwt({secret: jwtPassword}), async (ctx,next)=>{
+   
+    let token = await istoken(ctx,jwtPassword)
+    let body = ctx.request.body
+    let index = body.index
+    console.log(token)
+    global.apiList[index].delete = true
+    // 校验token
+    ctx.body = {ok:true,message:'登出成功'}
+}).get('/deleteLog',koajwt({secret: jwtPassword}),async (ctx,next)=>{
+    let token = await istoken(ctx,jwtPassword)
+    ctx.body = {ok:true,message:'登出成功'}
+})
+
+
+Array.prototype.remove=function(dx)
+{
+    if(isNaN(dx)||dx>this.length){return false;}
+    for(var i=0,n=0;i<this.length;i++)
+    {
+        if(this[i]!=this[dx])
+        {
+        this[n++]=this[i]
+        }
+    }
+    this.length-=1
+　}
 
 module.exports = router;

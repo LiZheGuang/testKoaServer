@@ -2,15 +2,11 @@
 const Koa = require('koa');
 const koaBody = require('koa-bodyparser');
 const views = require('koa-views')
-const koajwt = require('koa-jwt');
-
 const static = require('koa-static')
 const path  = require('path')
-// 静态资源目录对于相对入口文件index.js的路径
-
 const app = new Koa();
 const router = require('./router.js')
-
+const logger = require('koa-logger')
 const bodyParser = require('koa-bodyparser')
 
 global.apiList = []
@@ -18,8 +14,10 @@ global.apiList = []
 app.use(static(
   path.join(__dirname, './static')
 ))
-// Authorization
-// Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYWRtaW4iLCJwYXNzd29yZCI6IjEyMzQ1NiIsImlhdCI6MTU0MTMzMzkzMywiZXhwIjoxNTQxMzQxMTMzfQ.8t1kCBXYwl8UDuraYKp78352YH73pFobx8KGBe1xaDQ
+
+app.use(logger((str, args) => {
+    console.log(str)
+  }))
 app.use(async (ctx, next) => {
     let body = {
         creadTime: new Date(),
@@ -31,7 +29,6 @@ app.use(async (ctx, next) => {
         origin: ctx.origin,
         href: ctx.href,
         path: ctx.path,
-        query: ctx.query,
         querystring: ctx.querystring,
         host: ctx.host,
         hostname: ctx.hostname,
@@ -41,12 +38,9 @@ app.use(async (ctx, next) => {
         secure: ctx.secure,
         ip: ctx.ip,
         ips: ctx.ips,
-        subdomains: ctx.subdomains,
         status: ctx.status
     }
     global.apiList.push(body)
-
-    console.log(ctx)
     await next()
 })
 
@@ -79,11 +73,11 @@ app.use( async (ctx, next) => {
    
 })
 
-app.use(koajwt({
-    secret: 'a7161089'
-}).unless({
-    path: [/^\/login/,/^\/index/]
-}));
+// app.use(koajwt({
+//     secret: 'a7161089'
+// }).unless({
+//     path: [/^\/login/,/^\/index/]
+// }));
 
 app.use(router.routes()).use(router.allowedMethods());
 
