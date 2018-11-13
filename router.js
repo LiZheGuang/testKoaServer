@@ -1,30 +1,28 @@
 const KoaRouter = require('koa-router');
-
-const jwt = require('jsonwebtoken');
-
 const koajwt = require('koa-jwt');
-
 const istoken = require('./lib/authorization.js').isToken
+const index = require('./controller/index').index
+const login = require('./controller/login')
+
+let staticConfigs = require('./staticConfigs')
 
 let router = new KoaRouter();
 
-let userDB = [{
+global.userDB = [{
     accounts: 'admin',
     password: '123456'
 }]
 
-let jwtPassword = 'a7161089'
+global.jwtPassword = 'a7161089'
 
 router.get('/', async (ctx, next) => {
-    // ctx.router available
-    let title = 'index'
-    // 查询本地是否有token，
-    let token = ctx.cookies.get('token')
-    
-    if(token){
-        // 有token
-        await ctx.render('index', {
-            title: title,
+
+    let token = index(ctx)
+    console.log(ctx)
+     if(token){
+        // 有toke
+       await ctx.render('index', {
+            title: '请求日志页',
             log:global.apiList
         })
     }else{
@@ -34,69 +32,16 @@ router.get('/', async (ctx, next) => {
 
 
 router.get('/login', async (ctx, next) => {
-
     await ctx.render('login', {
         title: 'login'
     })
 }).post('/login', async (ctx, next) => {
-    console.log('post请求')
-    console.log(ctx.request.body)
-    let accounts = ctx.request.body.accounts
-    let password = ctx.request.body.password
-
-    console.log(userDB[0].accounts == accounts && userDB[0].password == password)
-
-
-
-    if (userDB[0].accounts == accounts && userDB[0].password == password) {
-        // 先判断是否有这个账号
-        console.log('有这个账户')
-        // 生成token
-        let token = jwt.sign({
-            name: accounts,
-            password:password
-        }, jwtPassword, { expiresIn: '2h' });
-
-        ctx.cookies.set(
-            'token', token, {
-                // domain:'localhost', // 写cookie所在的域名
-                path: '/',       // 写cookie所在的路径
-                maxAge:  2*60*60*1000,   // cookie有效时长
-                // expires: new Date(), // cookie失效时间
-                httpOnly: false,  // 是否只用于http请求中获取
-                overwrite: false  // 是否允许重写
-            }
-        )
-
-        // 登陆成功直接跳转
-        ctx.redirect('/')
-
-
-    } else {
-        // 登陆失败
-        return ctx.body = {
-            ok: false,
-            message: '登录失败，没有此账号'
-        }
-    }
-
-
-
+    login.loginPost(ctx)
 })
+
 
 
 router.get('/test',async (ctx,next)=>{
-    console.log('test')
-    
-    // let body =  ctx.request.body 
-    // let token = ctx.get.cookies('token')
-    // console.log(token)
-    console.log('执行了吗')
-    ctx.body = {code:200}
-})
-
-router.get('/user',async (ctx,next)=>{
-    let body =  ctx.request.body 
     console.log('执行了吗')
     ctx.body = {code:200}
 })
@@ -108,6 +53,7 @@ router.get('/log', async (ctx, next) => {
         code:200,
         log:apiList
     }
+    console.log('log REQUIRE')
 })
 
 // 登出
@@ -116,7 +62,7 @@ router.post('/logout', koajwt({secret: jwtPassword}),async (ctx,next)=>{
     ctx.body = {ok:true,message:'登出成功'}
     ctx.cookies.set('token','',{signed:false,maxAge:0})
 })
-
+// 删除用户
 router.post('/deleteLog', koajwt({secret: jwtPassword}), async (ctx,next)=>{
    
     let token = await istoken(ctx,jwtPassword)
@@ -126,11 +72,24 @@ router.post('/deleteLog', koajwt({secret: jwtPassword}), async (ctx,next)=>{
     global.apiList[index].delete = true
     // 校验token
     ctx.body = {ok:true,message:'登出成功'}
-}).get('/deleteLog',koajwt({secret: jwtPassword}),async (ctx,next)=>{
-    let token = await istoken(ctx,jwtPassword)
-    ctx.body = {ok:true,message:'登出成功'}
 })
 
+// userinfo
+router.get('/user',async (ctx,next)=>{
+    await ctx.render('user', {
+        title: '个人中心页',
+        data:staticConfigs.userInfo.infoData
+    })
+})
+router.post('/userName',async (ctx,next)=>{
+    console.log('修改名字')
+    console.log(ctx.request.body.nickName);
+    let nickName = ctx.request.body.nickName
+
+
+    staticConfigs.userInfo.infoData.nickName = nickName
+    ctx.redirect('/user')
+})
 
 Array.prototype.remove=function(dx)
 {

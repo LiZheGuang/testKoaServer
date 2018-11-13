@@ -1,15 +1,38 @@
 
 const Koa = require('koa');
-const koaBody = require('koa-bodyparser');
 const views = require('koa-views')
 const static = require('koa-static')
 const path  = require('path')
+const os = require('os');
+const fs = require('fs');
+// let bodyParser = require('koa-body');
 const app = new Koa();
 const router = require('./router.js')
 const logger = require('koa-logger')
 const bodyParser = require('koa-bodyparser')
 
+
+
 global.apiList = []
+
+// const main = async function(ctx) {
+//     const tmpdir = os.tmpdir();
+//     const filePaths = [];
+//     const files = ctx.request.body.files || {};
+  
+//     for (let key in files) {
+//       const file = files[key];
+//       const filePath = path.join(tmpdir, file.name);
+//       const reader = fs.createReadStream(file.path);
+//       const writer = fs.createWriteStream(filePath);
+//       reader.pipe(writer);
+//       filePaths.push(filePath);
+//     }
+  
+//     ctx.body = filePaths;
+//   };
+  
+app.use(bodyParser());
 
 app.use(static(
   path.join(__dirname, './static')
@@ -17,7 +40,8 @@ app.use(static(
 
 app.use(logger((str, args) => {
     console.log(str)
-  }))
+}))
+
 app.use(async (ctx, next) => {
     let body = {
         creadTime: new Date(),
@@ -40,8 +64,11 @@ app.use(async (ctx, next) => {
         ips: ctx.ips,
         status: ctx.status
     }
-    global.apiList.push(body)
+    console.log('logUser1')
     await next()
+    console.log('logUser')
+    body.status = ctx.status;
+    global.apiList.push(body)
 })
 
 
@@ -51,9 +78,6 @@ app.use(bodyParser())
 app.use(views(path.join(__dirname, './view'), {
     extension: 'ejs'
 }))
-
-
-
 
 // 错误处理
 app.use( async (ctx, next) => {
@@ -67,26 +91,13 @@ app.use( async (ctx, next) => {
             }
         })
     }else{
-        console.log('youde')
         await next()
     }
    
 })
 
-// app.use(koajwt({
-//     secret: 'a7161089'
-// }).unless({
-//     path: [/^\/login/,/^\/index/]
-// }));
-
 app.use(router.routes()).use(router.allowedMethods());
 
-
-// 使用koa-bodyparser中间件
-// app.on('error', (err, ctx) => {
-//     // 报错
-//     log.error('server error', err, ctx)
-// });
 
 app.listen(3000)
 
