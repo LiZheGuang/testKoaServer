@@ -1,11 +1,12 @@
 const KoaRouter = require('koa-router');
+
 const koajwt = require('koa-jwt');
+
 const istoken = require('./lib/authorization.js').isToken
 const index = require('./controller/index').index
 const login = require('./controller/login')
-
 let staticConfigs = require('./staticConfigs')
-
+let creeper = require('./controller/creeper')
 let router = new KoaRouter();
 
 global.userDB = [{
@@ -15,7 +16,32 @@ global.userDB = [{
 
 global.jwtPassword = 'a7161089'
 
-router.get('/', async (ctx, next) => {
+router.get('/login', async (ctx, next) => {
+    console.log('login')
+    await ctx.render('login', {
+        title: 'login'
+    })
+}).post('/login', async (ctx, next) => {
+    login.loginPost(ctx)
+})
+
+
+router.use(async (ctx,next)=>{
+    console.log('中间件')
+    let token = index(ctx)
+    console.log(ctx)
+    if(token){
+        await next()
+    }else{
+        // if (ctx.url.indexOf('/login')== 0) {
+        //     await next()
+        // } else {
+            ctx.redirect('/login')
+        // }
+    }
+})
+
+router.get('/',async (ctx, next) => {
 
     let token = index(ctx)
     console.log(ctx)
@@ -31,20 +57,14 @@ router.get('/', async (ctx, next) => {
 });
 
 
-router.get('/login', async (ctx, next) => {
-    await ctx.render('login', {
-        title: 'login'
-    })
-}).post('/login', async (ctx, next) => {
-    login.loginPost(ctx)
-})
-
-
 
 router.get('/test',async (ctx,next)=>{
-    console.log('执行了吗')
-    ctx.body = {code:200}
+    ctx.body = {
+        code:200
+    }
 })
+
+
 
 router.get('/log', async (ctx, next) => {
     let title = 'Koa2'
@@ -81,14 +101,24 @@ router.get('/user',async (ctx,next)=>{
         data:staticConfigs.userInfo.infoData
     })
 })
+
 router.post('/userName',async (ctx,next)=>{
     console.log('修改名字')
     console.log(ctx.request.body.nickName);
     let nickName = ctx.request.body.nickName
-
-
     staticConfigs.userInfo.infoData.nickName = nickName
     ctx.redirect('/user')
+})
+
+// 爬虫test
+router.get('/creeper',async (ctx,next)=>{
+    let body = await creeper.creeperGet_awesomes()
+    
+    ctx.body ={
+        code:200,
+        data:body
+    }
+
 })
 
 Array.prototype.remove=function(dx)

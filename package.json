@@ -12,6 +12,13 @@
     "koa-router": "^7.4.0",
     "koa-static": "^5.0.0",
     "koa-views": "^6.1.4",
-    "koa-views-render": "^0.0.1"
+    "koa-views-render": "^0.0.1",
+    "request": "^2.88.0"
+  },
+  "devDependencies": {
+    "phantomjs": "^2.1.7+deprecated"
+  },
+  "scripts": {
+    "phantomjs": "node_modules/.bin/phantomjs"
   }
 }

@@ -15,7 +15,3 @@ const config = {
 };
 
 module.exports = config
-
-
-// 假设 375 的画布 
-// 往左移动 100px

@@ -9,28 +9,9 @@ const fs = require('fs');
 const app = new Koa();
 const router = require('./router.js')
 const logger = require('koa-logger')
-const bodyParser = require('koa-bodyparser')
-
-
+const bodyParser = require('koa-bodyparser') 
 
 global.apiList = []
-
-// const main = async function(ctx) {
-//     const tmpdir = os.tmpdir();
-//     const filePaths = [];
-//     const files = ctx.request.body.files || {};
-  
-//     for (let key in files) {
-//       const file = files[key];
-//       const filePath = path.join(tmpdir, file.name);
-//       const reader = fs.createReadStream(file.path);
-//       const writer = fs.createWriteStream(filePath);
-//       reader.pipe(writer);
-//       filePaths.push(filePath);
-//     }
-  
-//     ctx.body = filePaths;
-//   };
   
 app.use(bodyParser());
 
@@ -39,10 +20,12 @@ app.use(static(
 ))
 
 app.use(logger((str, args) => {
+
     console.log(str)
 }))
 
 app.use(async (ctx, next) => {
+
     let body = {
         creadTime: new Date(),
         header: ctx.header,
@@ -66,12 +49,14 @@ app.use(async (ctx, next) => {
     }
     console.log('logUser1')
     await next()
-    console.log('logUser')
     body.status = ctx.status;
     global.apiList.push(body)
+
 })
 
 
+
+ 
 
 app.use(bodyParser())
 // 加载模板引擎
